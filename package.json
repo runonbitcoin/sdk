@@ -1,6 +1,6 @@
 {
-  "name": "@runonbitcoin/sdk",
-  "version": "0.6.9",
+  "name": "run-sdk",
+  "version": "0.6.10",
   "main": "dist/run.node.min.js",
   "browser": "dist/run.browser.min.js",
   "dependencies": {
