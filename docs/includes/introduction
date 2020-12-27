@@ -1,0 +1,4 @@
+<h1 id='introduction'>Introduction</h1>
+<p>Run is a platform to build apps and tokens on Bitcoin. Developers create applications using interactive objects, called jigs. Jigs allow you to build almost anything you can dream up: tokens, contracts, interfaces, elections, games, digital pets, and more — all run on Bitcoin.</p>
+
+<p>Run supports full object-oriented programming and arbitrary code today. It is secure and performant for real applications. These docs will help you get started!</p>

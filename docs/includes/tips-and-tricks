@@ -1,0 +1,177 @@
+<h1 id='tips-and-tricks'>Tips and Tricks</h1><h2 id='tips-and-tricks-limiting-supply'>Limiting Supply</h2><pre class="highlight javascript tab-javascript"><code><span class="kr">class</span> <span class="nx">Weapon</span> <span class="kr">extends</span> <span class="nx">Jig</span> <span class="p">{</span>
+  <span class="nx">init</span><span class="p">(</span><span class="nx">owner</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Only the GameItems class can mint Weapon instances</span>
+    <span class="nx">expect</span><span class="p">(</span><span class="nx">caller</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="nx">GameItems</span><span class="p">)</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">owner</span> <span class="o">=</span> <span class="nx">owner</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">class</span> <span class="nx">GameItems</span> <span class="kr">extends</span> <span class="nx">Jig</span> <span class="p">{</span>
+  <span class="kr">static</span> <span class="nx">createWeapon</span><span class="p">(</span><span class="nx">owner</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">weaponCount</span><span class="o">++</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">weaponCount</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">'too many weapons'</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">Weapon</span><span class="p">(</span><span class="nx">owner</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nx">GameItems</span><span class="p">.</span><span class="nx">weaponCount</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="nx">GameItems</span><span class="p">.</span><span class="nx">deps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">Weapon</span><span class="p">,</span> <span class="nx">expect</span> <span class="p">}</span>
+<span class="nx">Weapon</span><span class="p">.</span><span class="nx">deps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">GameItems</span><span class="p">,</span> <span class="nx">expect</span> <span class="p">}</span>
+</code></pre>
+<p>The supply of a jig class may be limited through the use of a <em>minter</em>. The <em>minter</em> is a separate jig that regulates the number of <em>mintee</em> jigs produced. In the example on the right, the <code>GameItems</code> jig class is the <em>minter</em> and is owned by the game. The <code>Weapon</code> jig object is the <em>mintee</em> and is owned by a player. The <code>Weapon</code> class enforces that it can only be created by <code>GameItems</code>, and the <code>GameItems</code> class limits the supply of <code>Weapon</code>.</p>
+
+<p>In <code>Weapon.init</code>, we check that the weapon is being created by a <code>GameItems</code> instance using the <a href="#advanced-usage-caller">caller</a> special property. <code>caller</code> is the jig that called the current method being executed. If a player tried to create a <code>Weapon</code> instance independent of <code>GameItems</code>, Run would throw an error because the <code>caller</code> property would be <code>null</code>.</p>
+
+<p>In <code>GameItems</code>, we check that there are no more than 10 items created by the game in <code>createWeapon(owner)</code>. This limits the supply. However, we also have to check that <code>GameItems</code> is only able to be created by the game company. This is to prevent users from creating their own <code>GameItems</code> classes to mint their own weapons.</p>
+<h2 id='tips-and-tricks-dynamic-whitelists'>Dynamic Whitelists</h2>
+<blockquote>
+<p>A dynamic whitelist to support new tokens over time</p>
+</blockquote>
+<pre class="highlight javascript tab-javascript"><code><span class="kr">class</span> <span class="nx">SupportedClasses</span> <span class="p">{</span>
+  <span class="nx">init</span><span class="p">()</span> <span class="p">{</span> <span class="k">this</span><span class="p">.</span><span class="nx">classes</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Set</span><span class="p">()</span> <span class="p">}</span>
+  <span class="nx">add</span><span class="p">(</span><span class="nx">T</span><span class="p">)</span> <span class="p">{</span> <span class="k">this</span><span class="p">.</span><span class="nx">classes</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">T</span><span class="p">)</span> <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">whitelist</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SupportedClasses</span><span class="p">()</span>
+
+<span class="kr">class</span> <span class="nx">Game</span> <span class="p">{</span>
+  <span class="nx">init</span><span class="p">()</span> <span class="p">{</span> <span class="k">this</span><span class="p">.</span><span class="nx">items</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Set</span><span class="p">()</span> <span class="p">}</span>
+
+  <span class="nx">use</span><span class="p">(</span><span class="nx">jig</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">expect</span><span class="p">(</span><span class="nx">Game</span><span class="p">.</span><span class="nx">whitelist</span><span class="p">.</span><span class="nx">classes</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">jig</span><span class="p">.</span><span class="nx">constructor</span><span class="p">)).</span><span class="nx">toBe</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">jig</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nx">Account</span><span class="p">.</span><span class="nx">whitelist</span> <span class="o">=</span> <span class="nx">whitelist</span> 
+</code></pre>
+<p>An app may want to allow third-party developers to create new classes of jigs. Those jigs can freely interact with existing jigs once approved. For this, you can create a dynamic whitelist of approved classes that jigs can check. See the example to the right 🠮</p>
+
+<aside class="notice">
+<b>Note:</b> Dynamic blacklists pose more challenges than whitelists. Solutions coming soon.
+</aside>
+<h2 id='tips-and-tricks-atomic-swaps'>Atomic Swaps</h2>
+<blockquote>
+<p>Atomically swapping two items with different owners</p>
+
+<p>Machine 1</p>
+</blockquote>
+<pre class="highlight javascript tab-javascript"><code><span class="kr">const</span> <span class="nx">mine</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">run</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">myLocation</span><span class="p">)</span>
+<span class="kr">const</span> <span class="nx">theirs</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">run</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">theirLocation</span><span class="p">)</span>
+
+<span class="kr">const</span> <span class="nx">me</span> <span class="o">=</span> <span class="nx">mine</span><span class="p">.</span><span class="nx">owner</span>
+<span class="kr">const</span> <span class="nx">them</span> <span class="o">=</span> <span class="nx">theirs</span><span class="p">.</span><span class="nx">owner</span>
+
+<span class="kr">const</span> <span class="nx">tx</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Run</span><span class="p">.</span><span class="nx">Transaction</span><span class="p">()</span>
+<span class="nx">tx</span><span class="p">.</span><span class="nx">update</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">mine</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">them</span><span class="p">))</span>
+<span class="nx">tx</span><span class="p">.</span><span class="nx">update</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">theirs</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">me</span><span class="p">))</span>
+<span class="kr">const</span> <span class="nx">rawtx</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">tx</span><span class="p">.</span><span class="kr">export</span><span class="p">()</span>
+</code></pre>
+<blockquote>
+<p>Machine 2</p>
+</blockquote>
+<pre class="highlight javascript tab-javascript"><code><span class="kr">const</span> <span class="nx">tx</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">run</span><span class="p">.</span><span class="nx">transaction</span><span class="p">.</span><span class="kr">import</span><span class="p">(</span><span class="nx">rawtx</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="nx">tx</span><span class="p">.</span><span class="nx">outputs</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// TODO: Inspect the transaction to be sure it atomically swaps</span>
+<span class="p">}</span>
+
+<span class="nx">await</span> <span class="nx">tx</span><span class="p">.</span><span class="nx">publish</span>
+</code></pre>
+<p>Run supports atomically updating jigs with different owners using the Transaction API. One application for this is atomic swaps, where two jigs owned by different users are exchanged in a single transaction.</p>
+
+<p>The general process for an atomic swap is for one user to start a Run transaction by calling <code>new Run.Transaction()</code>. Then, this user performs all updates inside an <code>update()</code> call on the transaction, including calling methods on jigs they don&#39;t own. Run allows this user to build the transaction even if they won&#39;t be able to sign for every jig. Finally, this first user calls <code>tx.export()</code> to export the transaction, which will pay and sign for it in the process. The transaction is now built and must now be handed to other parties for them to sign. The other party then calls <code>run.import()</code> to load the transaction they received. They may then want to check the transaction by inspecting <code>tx.outputs</code> and <code>Run.util.metadata</code>. If they approve, then they may call <code>tx.publish()</code> to sign and publish. If more signatures are needed, they can export the transaction instead of publishing.</p>
+
+<p>The Transaction API may also be used to simulate state channels and propose changes to other jigs. See the <a href="#api-reference-transaction">Transaction API</a> for more information.</p>
+<h2 id='tips-and-tricks-using-run-on-a-server'>Using Run on a Server</h2>
+<p>You may want to use Run on your server. For example you can:</p>
+
+<ul>
+<li>Issue tokens to users who send you BSV</li>
+<li>Index user jigs to allow searching in your app</li>
+<li>Take actions automatically as in a game server</li>
+<li>Gather statistics about your user&#39;s behaviors</li>
+<li>Administrative tasks like managing a blacklist</li>
+</ul>
+
+<p>The architecture you choose will depend on your application. You might create a REST service using <code>express</code> that allows users to make requests. Or you might index all jigs using a Planaria crawler. Or you might deploy a serverless function that responds to events. Run supports all of these architectures.</p>
+
+<p>No matter the approach, you&#39;ll likely use Node on your servers. Run requires at least version 10 of Node. You can check which version you are using with <code>node --version</code>. If you are using Google Functions, be sure to set <code>{ &quot;engine&quot;: 10 }</code> in your <code>package.json</code>, because it defaults to Node 8.</p>
+
+<p>Here are a few more tips:</p>
+<h3 id='tips-and-tricks-using-run-on-a-server-increase-cache-limits'>Increase Cache Limits</h3>
+<blockquote>
+<p>Increase the state cache size</p>
+</blockquote>
+<pre class="highlight javascript tab-javascript"><code><span class="nx">run</span><span class="p">.</span><span class="nx">cache</span><span class="p">.</span><span class="nx">sizeMB</span> <span class="o">=</span> <span class="mi">1000</span>
+</code></pre>
+<p>The <code>Cache</code> stores jig state and blockchain transactions. By default, it caches 10MB of data in memory. This can be increased by setting <code>run.cache.sizeMB</code>. Alternatively, you can choose to <a href="#advanced-usage-using-run-on-a-server-persist-state">persist state</a> on disk rather than in memory.</p>
+
+<p>After increasing these limits, you may also need to increase Node&#39;s memory limits. If you launch your server by starting node manually, you can increase its memory via: <code>node --max-old-space-size=8192</code>.</p>
+<h3 id='tips-and-tricks-using-run-on-a-server-persist-the-cache'>Persist the Cache</h3>
+<blockquote>
+<p>Save state into a Firestore collection</p>
+</blockquote>
+<pre class="highlight javascript tab-javascript"><code><span class="kr">class</span> <span class="nx">Firestore</span> <span class="p">{</span>
+  <span class="nx">async</span> <span class="nx">get</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">entry</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">db</span><span class="p">.</span><span class="nx">collection</span><span class="p">(</span><span class="s1">'state'</span><span class="p">).</span><span class="nx">doc</span><span class="p">(</span><span class="nx">key</span><span class="p">).</span><span class="nx">get</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">entry</span><span class="p">.</span><span class="nx">exists</span><span class="p">)</span> <span class="k">return</span> <span class="nx">entry</span><span class="p">.</span><span class="nx">data</span><span class="p">()</span>
+  <span class="p">}</span>
+
+  <span class="nx">async</span> <span class="nx">set</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">db</span><span class="p">.</span><span class="nx">collection</span><span class="p">(</span><span class="s1">'state'</span><span class="p">).</span><span class="nx">doc</span><span class="p">(</span><span class="nx">key</span><span class="p">).</span><span class="nx">set</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">run</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Run</span><span class="p">({</span> <span class="na">cache</span><span class="p">:</span> <span class="k">new</span> <span class="nx">Firestore</span><span class="p">()</span> <span class="p">})</span>
+</code></pre>
+<p>It is a good idea to persist your cache in a database so your backend never needs to load the same jig twice. It is even more important when using multiple servers because you can share this database. Simply implement the <a href="#api-reference-apis-cache">Cache</a> API.</p>
+
+<p>Run will automatically call <code>get</code> on your <code>Cache</code> implementation when values are needed, and <code>set</code> when values are ready to be cached. Cached values will never change for a given key. Just implement these two methods to load and save the cache into your preferred key-value database: Redis, Firestore, DynamoDB, etc.</p>
+
+<p>To the right is an example of persisting in Google Firestore. You may want to tweak it so that it uses an in-memory local cache first and then a fallback to Google Firestore if that misses.</p>
+<h3 id='tips-and-tricks-using-run-on-a-server-avoid-race-conditions'>Avoid Race Conditions</h3>
+<p>If you are seeing server errors about <code>Missing inputs</code> or <code>txn-mempool-conflict</code>, it is likely that you have encountered a race condition. Two pieces of code are likely attempting to update the same jig at the same time, and are attemping to spend the same Bitcoin outputs. The network can only accept one. To solve this, here are a few recommendations:</p>
+
+<p><strong>Load jigs once at the start</strong>: If you have jigs you are reused across many request handlers, then load those jigs once upon starting your server, rather than loading them each time they are used. This will let Run track the output as a single object, and successive updates on that object will be correctly enqueued.</p>
+
+<p><strong>Separate server, separate purses</strong>: Every Run instance has its own internal update queue, so it is unlikely that the purse will be double-spent on a single server. But on multiple servers, if a purse key is shared, then it is very likely that double-spend errors will occur. To avoid this, use different purse keys on different servers.</p>
+
+<p><strong>Sync after every update</strong>: Call <code>await jig.sync()</code> on jigs after you call a method to be sure that the updates were applied before continuing on.</p>
+
+<p><strong>Serialize risky updates</strong>: If a request handler makes updates to multiple jigs, and these updates can conflict if interleaved across multiple users, then consider serializing these updates. The most reliable approach is to bundle all jig updates together in a <a href="#advanced-usage-batch-transactions">batch</a>, so that the operation is all-or-nothing. An alternative is to put updates into a task queue like <code>p-limit</code>.</p>
+
+<p><strong>Add retry logic</strong>: If the above changes do not fix a race condition, consider adding retry logic.</p>
+<h3 id='tips-and-tricks-using-run-on-a-server-load-only-safe-code'>Load Only Safe Code</h3>
+<p>Even with sandboxing, arbitrary code has the potential for infinite loops and infinite memory attacks that can take down your server. Avoid running code that you do not trust. You should only add transaction IDs to your trusted set that you know are safe. Also, it is generally not recommended to call <code>run.inventory.sync()</code> on servers, because that will load UTXOs you receive from others.</p>
+<h2 id='tips-and-tricks-debugging'>Debugging</h2>
+<p>Sometimes you will be faced with errors you don&#39;t understand. Don&#39;t fret! Here are some tips:</p>
+
+<ul>
+<li>Grab the latest Run SDK from <a href="https://www.run.network">run.network</a></li>
+<li>Redeploy any jigs from older versions of Run</li>
+<li>Use Node 10+ or a modern web browser like Chrome, Firefox, Edge, or Safari</li>
+<li>Use the mockchain to check that it is not a connection or server-side error</li>
+<li>Enable Run&#39;s internal logs by passing <code>{ logger: console }</code> into <code>Run</code></li>
+</ul>
+<h3 id='tips-and-tricks-debugging-writing-unit-tests'>Writing Unit Tests</h3>
+<p>It is always a good idea to write unit tests for your jigs. We recommend using a framework like <code>mocha</code> or <code>jest</code>, and running your tests using the mockchain. The mockchain will be faster and will isolate your Jig logic from any network errors.</p>
+<h3 id='tips-and-tricks-debugging-too-long-mempool-chain'>too-long-mempool-chain</h3>
+<p>If you see a <code>too-long-mempool-chain</code> error, it means that you&#39;ve hit a BSV network limitation. Today, only 25 transactions may be chained together in each Bitcoin block, and because of how Run works, you are likely to hit this in one of two ways:</p>
+
+<ol>
+<li>You update a jig 25 times in a ~10 minute block window</li>
+<li>You create ~250 separate jigs in a ~10 minute block window using the same purse</li>
+</ol>
+
+<p>For #1, our best advice is to see if you can rearchitect your Jigs to avoid this case. We will provide a built-in solution in the future to avoid this limit.</p>
+
+<p>For #2, we recommend switching between purses. Run automatically splits your UTXOs into 10 pieces, so you usually will be able to make over 200 transactions per block for each purse. You can increase this limit by setting <code>run.purse.splits = 100</code>.</p>
+<h3 id='tips-and-tricks-debugging-getting-help'>Getting Help</h3>
+<p>Please reach out to @niv in the BSV slack channels. We are happy to help you debug and fix any issues you encounter. If you can, see if you can reproduce the issue in the browser using <code>getting_started.html</code>.</p>

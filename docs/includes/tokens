@@ -1,0 +1,84 @@
+<h1 id='tokens'>Tokens</h1>
+<p>Using jigs, you can create tokens similar to ERC-20. These can be used for stablecoins, in-game currencies, tradable reward points, shares of stock, and more. Unlike ERC-20 however, where different users interact through a smart contract, in Run each user owns their own tokens. This makes them more like native bitcoin.</p>
+
+<p>In Run, tokens are just jigs that are <em>fungible</em>, meaning that you can divide them into smaller pieces and combine them back together, like cash. Tokens can be minted, owned, sent, and redeemed. And while you could write your own token class to implement this functionality, Run provides a base <code>Token</code> standard for your convenience. Simply extend from <code>Token</code> to create your own fungible token. As the owner of the class, only you will be able to mint new coins for your users.</p>
+
+<p>Here we will guide you through a few use cases. For more, see <a href="#api-reference-extras-token"><code>API Reference: Token</code></a>.</p>
+<h2 id='tokens-defining'>Defining</h2>
+<blockquote>
+<p>Deploy a new token class</p>
+</blockquote>
+<pre class="highlight javascript tab-javascript"><code><span class="kr">const</span> <span class="nx">run</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Run</span><span class="p">({</span> <span class="nx">owner</span> <span class="p">})</span>
+
+<span class="c1">// Define the token class</span>
+<span class="kr">class</span> <span class="nx">USDCoin</span> <span class="kr">extends</span> <span class="nx">Token</span> <span class="p">{</span> <span class="p">}</span>
+<span class="nx">USDCoin</span><span class="p">.</span><span class="nx">decimals</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="nx">USDCoin</span><span class="p">.</span><span class="nx">symbol</span> <span class="o">=</span> <span class="s1">'USDC'</span>
+<span class="nx">USDCoin</span><span class="p">.</span><span class="nx">backingBank</span> <span class="o">=</span> <span class="s1">'HSBC'</span>
+<span class="nx">USDCoin</span><span class="p">.</span><span class="nx">bankAccount</span> <span class="o">=</span> <span class="s1">'12345'</span>
+
+<span class="c1">// Deploy</span>
+<span class="nx">run</span><span class="p">.</span><span class="nx">deploy</span><span class="p">(</span><span class="nx">USDCoin</span><span class="p">)</span>
+<span class="nx">await</span> <span class="nx">run</span><span class="p">.</span><span class="nx">sync</span><span class="p">()</span>
+
+<span class="c1">// Write this down</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">USDCoin</span><span class="p">.</span><span class="nx">location</span><span class="p">)</span>
+</code></pre>
+<p>Each new kind of token requires its own token class. Extend from <code>Token</code> and give your class a good name! Then configure it using the <code>symbol</code> and <code>decimals</code> properties, as well as any other properties that describe your token. See the <a href="#advanced-usage-standard-metadata">Standard Metadata</a> section for various other metadata we recommend.</p>
+
+<p>Next, decide who will be the owner of your token class. The class owner is solely able to mint new tokens so it should be very secure. You may assign your token class to a private key or a more complex ownership script. Consider assigning your token to a <a href="#api-reference-extras-group">Group</a> lock to require multiple parties to sign off for mints.</p>
+
+<p>Once you&#39;ve defined all the properties for your token class and chosen an owner, use ether the <a href="#tools-deploy">Deploy Tool</a> or <code>run.deploy</code> in a script to deploy your class to the blockchain. Be sure to write down its location afterward. Now let&#39;s mint some tokens!</p>
+<h2 id='tokens-minting'>Minting</h2><pre class="highlight javascript tab-javascript"><code><span class="c1">// Load and sync your token class</span>
+<span class="kr">const</span> <span class="nx">USDCoin</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">run</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">tokenClassLocation</span><span class="p">)</span>
+<span class="nx">await</span> <span class="nx">USDCoin</span><span class="p">.</span><span class="nx">sync</span><span class="p">()</span>
+
+<span class="c1">// Mint new coins to users. Only USDCoin.owner may do this</span>
+<span class="kr">const</span> <span class="nx">mintedCoin</span> <span class="o">=</span> <span class="nx">USDCoin</span><span class="p">.</span><span class="nx">mint</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="nx">address</span><span class="p">)</span>
+<span class="nx">await</span> <span class="nx">mintedCoin</span><span class="p">.</span><span class="nx">sync</span><span class="p">()</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">mintedCoin</span><span class="p">.</span><span class="nx">amount</span><span class="p">)</span> <span class="c1">// 100</span>
+</code></pre>
+<p>Minting tokens is as simple as calling <code>mint()</code> on your token class and passing in the amount of tokens to mint along with the address to mint to. If you don&#39;t specify an address, you will mint tokens to yourself. Let&#39;s talk about some of the edge cases.</p>
+
+<p>You may wish to mint to several users in a single transaction. To do this, use <code>run.transaction()</code> to perform them all at once. You may also wish to mint whenever a user sends you the appropriate amount of BSV. To do this, you might host a Node server that responds to blockchain events. When you start-up your server, call <code>run.load</code> to load your token class once and then <code>run.sync</code> to sync it, so that every subsequent mint happens quickly.</p>
+
+<p>Sometimes you only want to mint a limited supply. In this case when you are finished minting all tokens, you can call <code>destroy()</code> on your token class to provably halt any further mints. Calling destroy prevents new tokens from being created in your name even in the event that your keys get hacked.</p>
+<h2 id='tokens-sending'>Sending</h2><pre class="highlight javascript tab-javascript"><code><span class="c1">// Send part of a coin to someone else and keep the change</span>
+<span class="kr">const</span> <span class="nx">sentCoin</span> <span class="o">=</span> <span class="nx">coinToSend</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">pubkey</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+</code></pre>
+<p>Users that own your tokens can freely send them to others. To send a token, they simply call <code>send()</code> and pass in the new owner and the amount to send. A new token will be split off from the current one with the amount and owner specified. If they send the full amount, then the <code>coinToSend</code> is destroyed.</p>
+<h2 id='tokens-combining'>Combining</h2>
+<blockquote>
+<p>Combine and send in a single transaction</p>
+</blockquote>
+<pre class="highlight javascript tab-javascript"><code><span class="kr">const</span> <span class="nx">tokens</span> <span class="o">=</span> <span class="nx">run</span><span class="p">.</span><span class="nx">inventory</span><span class="p">.</span><span class="nx">jigs</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">jig</span> <span class="o">=&gt;</span> <span class="nx">jig</span> <span class="k">instanceof</span> <span class="nx">USDCoin</span><span class="p">)</span>
+
+<span class="kr">const</span> <span class="nx">tx</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Run</span><span class="p">.</span><span class="nx">Transaction</span><span class="p">()</span>
+<span class="nx">tx</span><span class="p">.</span><span class="nx">update</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">combine</span><span class="p">(</span><span class="nx">tokens</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span>
+<span class="nx">tx</span><span class="p">.</span><span class="nx">update</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">send</span><span class="p">(</span><span class="nx">amount</span><span class="p">,</span> <span class="nx">address</span><span class="p">))</span>
+<span class="nx">await</span> <span class="nx">tx</span><span class="p">.</span><span class="nx">publish</span><span class="p">()</span>
+</code></pre>
+<p>After users have received several tokens, they may want to combine them into a single token containing their combined amount. We recommend wallets combine tokens regularly before every send to minimize the number of objects that need to be loaded. To combine tokens, call the <code>combine()</code> method on one token and pass in the other tokens that should be merged into it. You can even combine and send in a single transaction, as seen to the right.</p>
+<h2 id='tokens-redeeming'>Redeeming</h2>
+<blockquote>
+<p>Redeem a token as bitcoin</p>
+</blockquote>
+<pre class="highlight javascript tab-javascript"><code><span class="kr">const</span> <span class="nx">sender</span> <span class="o">=</span> <span class="nx">token</span><span class="p">.</span><span class="nx">sender</span>
+<span class="kr">const</span> <span class="nx">satoshiValue</span> <span class="o">=</span> <span class="nx">tokensToSatoshis</span><span class="p">(</span><span class="nx">token</span><span class="p">.</span><span class="nx">amount</span><span class="p">)</span>
+
+<span class="kr">class</span> <span class="nx">Payment</span> <span class="kr">extends</span> <span class="nx">Jig</span> <span class="p">{</span>
+  <span class="nx">init</span><span class="p">(</span><span class="nx">owner</span><span class="p">,</span> <span class="nx">satoshis</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">owner</span> <span class="o">=</span> <span class="nx">owner</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">satoshis</span> <span class="o">=</span> <span class="nx">satoshis</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">const</span> <span class="nx">tx</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Run</span><span class="p">.</span><span class="nx">Transaction</span><span class="p">()</span>
+<span class="nx">tx</span><span class="p">.</span><span class="nx">update</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="nx">token</span><span class="p">.</span><span class="nx">destroy</span><span class="p">())</span>
+<span class="nx">tx</span><span class="p">.</span><span class="nx">update</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nx">Payment</span><span class="p">(</span><span class="nx">sender</span><span class="p">,</span> <span class="nx">satoshiValue</span><span class="p">))</span>
+<span class="nx">await</span> <span class="nx">tx</span><span class="p">.</span><span class="nx">publish</span><span class="p">()</span>
+</code></pre>
+<p>Tokens often need to be redeemed back into their underlying asset. A stablecoin for example might be converted into its backing currency. To do this, the user will send their token to an address you control. You should monitor this address and redeem their tokens when you receive them. The <code>Token</code> class has a <code>sender</code> property that specifies the last owner of that token. When users send you their tokens, you can use the <code>sender</code> to determine who to redeem to. Then you can destroy that token so that it is no longer in circulation. See the example to the right.</p>
+<h2 id='tokens-blacklisting'>Blacklisting</h2>
+<p>You may need to blacklist individual tokens. For example, a user may lose their keys and request that you reissue their tokens. Or law enforcement may come to you to request blacklisting if your tokens are being used illegally. In both cases, the recommended solution is to keep a list of token locations that are blacklisted and not redeem any token that is on that blacklist. You will need to track descendant UTXOs too and blacklist them as well. But stay tuned! A simpler solution is coming.</p>

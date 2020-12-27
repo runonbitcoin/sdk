@@ -1,0 +1,57 @@
+<!doctype html>
+
+<html>
+
+<head>
+    <title>Explorer</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <link rel="stylesheet" type="text/css" href="styles/index.css">
+    <link rel="stylesheet" type="text/css" href="styles/prism.css">
+
+    <script src="https://twemoji.maxcdn.com/2/twemoji.min.js?12.0.4" integrity="sha384-5f4X0lBluNY/Ib4VhGx0Pf6iDCF99VGXJIyYy7dDLY5QlEd7Ap0hICSSZA1XYbc4" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.22.0/prism.min.js" integrity="sha384-LLWUgHqmNtcYGr+s2BeHPSPUDMeQooBw28D31tL6j9tSQPYN4qCGAYe/2htLIG+i" crossorigin="anonymous"></script>
+
+    <script src="lib/bsv.browser.min.js"></script>
+    <script src="lib/run.browser.min.js"></script>
+
+    <script src="scripts/helpers.js"></script>
+
+    <script src="components/network-switcher.js"></script>
+    <script src="components/search-bar.js"></script>
+    <script src="components/search-error.js"></script>
+    <script src="components/loading-spinner.js"></script>
+    <script src="components/explore-owner.js"></script>
+    <script src="components/explore-creation.js"></script>
+    <script src="components/explore-tx.js"></script>
+    <script src="components/search-window.js"></script>
+</head>
+
+<style>
+    #container {
+        margin-top: 100px;
+        display: flex;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    search-window {
+        width: 50%;
+        min-width: 600px;
+    }
+</style>
+
+<body>
+    <div id="container">
+        <search-window></search-window>
+    </div>
+</body>
+
+</html>
