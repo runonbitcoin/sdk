@@ -1,8 +1,19 @@
 {
   "name": "run-sdk",
-  "version": "0.6.10",
+  "version": "0.6.11",
+  "description": "A platform to build apps and tokens on Bitcoin",
+  "keywords": [
+    "javascript",
+    "jig",
+    "berry",
+    "token",
+    "smart contract",
+    "bitcoin",
+    "bsv"
+  ],
   "main": "dist/run.node.min.js",
   "browser": "dist/run.browser.min.js",
+  "license": "MIT",
   "dependencies": {
     "bsv": "^1.5.4"
   },

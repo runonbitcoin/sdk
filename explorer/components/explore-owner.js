@@ -38,30 +38,42 @@ class ExploreOwner extends HTMLElement {
         this.container.style.display = 'flex'
         this.loadingSpinner.show()
 
-        let jigs, code, classes, functions, dates
+        let jigs, code, classes, functions, dates, loaded
 
-        await serialize(async () => {
-            const run = new Run({ owner: this.address, network: this.network, trust: '*' })
-            await run.inventory.sync()
+        try {
+            await serialize(async () => {
+                const run = new Run({ owner: this.address, network: this.network, trust: '*' })
+                await run.inventory.sync()
 
-            jigs = run.inventory.jigs
-            code = run.inventory.code
+                jigs = run.inventory.jigs
+                code = run.inventory.code
 
-            if (jigs.length === 0 && code.length === 0) {
-                this.nojigs.style.display = 'block'
-                return
-            }
+                if (jigs.length === 0 && code.length === 0) {
+                    this.nojigs.style.display = 'flex'
+                    return
+                }
 
-            classes = code.filter(C => C.toString().startsWith('class'))
-            functions = code.filter(C => !C.toString().startsWith('class'))
+                classes = code.filter(C => C.toString().startsWith('class'))
+                functions = code.filter(C => !C.toString().startsWith('class'))
 
-            dates = new Map()
-            const creations = jigs.concat(classes).concat(functions)
-            const txids = creations.map(creation => creation.location.slice(0, 64))
-            const txtimePromises = txids.map(txid => run.blockchain.time(txid))
-            const txtimes = await Promise.all(txtimePromises)
-            txtimes.map((time, n) => dates.set(creations[n], new Date(time)))
-        })
+                dates = new Map()
+                const creations = jigs.concat(classes).concat(functions)
+                const txids = creations.map(creation => creation.location.slice(0, 64))
+                const txtimePromises = txids.map(txid => run.blockchain.time(txid))
+                const txtimes = await Promise.all(txtimePromises)
+                txtimes.map((time, n) => dates.set(creations[n], new Date(time)))
+
+                loaded = true
+            })
+        } catch (e) {
+            this.loadingSpinner.hide()
+            throw e
+        }
+
+        if (!loaded) {
+            this.loadingSpinner.hide()
+            return
+        }
 
         this.loadingSpinner.hide()
         this.result.style.display = 'flex'
@@ -158,6 +170,10 @@ class ExploreOwner extends HTMLElement {
             #nojigs {
                 width: 100%;
                 display: none;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                color: #f80;
             }
 
             #result {
