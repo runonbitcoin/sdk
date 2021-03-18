@@ -1,6 +1,6 @@
-# Run SDK - 0.6.17 beta
+# RUN SDK - 0.6.18 beta
 
-Run is a platform to build apps and tokens on Bitcoin.
+RUN is a platform to build apps and tokens on Bitcoin.
 
 To give it a go, visit https://run.network for tutorials.
 
