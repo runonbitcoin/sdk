@@ -1,6 +1,6 @@
 {
   "name": "run-sdk",
-  "version": "0.6.21",
+  "version": "0.6.22",
   "description": "A platform to build apps and tokens on Bitcoin",
   "keywords": [
     "javascript",
@@ -20,7 +20,7 @@
   "browser": "dist/run.browser.min.js",
   "license": "MIT",
   "dependencies": {
-    "bsv": "^1.5.4"
+    "bsv": "^1.5.5"
   },
   "repository": "git://github.com/runonbitcoin/sdk.git"
 }

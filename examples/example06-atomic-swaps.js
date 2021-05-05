@@ -10,6 +10,10 @@ async function main () {
     send (to) { this.owner = to }
   }
 
+  class TxFees extends Jig {
+    init(satoshis) { this.satoshis = satoshis }
+  }
+
   class Ransom extends Jig {
     init (tx, owner) { this.tx = tx; this.owner = owner }
   }
@@ -25,14 +29,16 @@ async function main () {
   await princess.sync()
 
   // ------------------------------------------------------------------------
-  // Town acquires some gold
+  // Town acquires some gold, and also some bitcoin for fees
   // ------------------------------------------------------------------------
 
   const townRun = new Run({ network: 'mock', trust: '*' })
 
   const gold = new Gold()
 
-  await gold.sync()
+  const fees = new TxFees(10000)
+
+  await townRun.sync()
 
   // ------------------------------------------------------------------------
   // Town creates an atomic swap proposal and signs it
@@ -42,6 +48,7 @@ async function main () {
 
   swap.update(() => gold.send(dragonRun.owner.pubkey))
   swap.update(() => princess.send(townRun.owner.pubkey))
+  swap.update(() => fees.destroy())
 
   const swapTransaction = await swap.export()
 
