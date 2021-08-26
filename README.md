@@ -1,4 +1,4 @@
-# RUN SDK - 0.6.28 beta
+# RUN SDK - 0.6.29 beta
 
 RUN is a platform to build apps and tokens on Bitcoin.
 
@@ -10,7 +10,7 @@ Run `npm install` to install node dependencies
 
 ## Contents
 
-- dist: Minified builds and deploy tool
+- dist: Minified builds for the browser and node
 
 ## Community
 
