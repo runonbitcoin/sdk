@@ -1,8 +1,8 @@
-# RUN SDK - 0.6.35 beta
+# RUN SDK - 0.6.36 beta
 
-RUN is a platform to build apps and tokens on Bitcoin.
+RUN is a token protocol to build whatever you dream up. A world of interactive apps and tokens.
 
-To give it a go, visit https://run.network for tutorials.
+To give it a go, visit https://run.network for tutorials and docs.
 
 ## Installation
 
@@ -18,4 +18,4 @@ Join us in the "run-sdk" channel on Atlantis Slack: https://atlantis.planaria.ne
 
 ## Getting Help
 
-DM @runonbitcoin on Twitter or Twetch, or ask for help the "run-sdk" channel in Atlantis Slack
+DM @runonbitcoin on Twitter, or ask for help the "run-sdk" channel in Atlantis Slack
