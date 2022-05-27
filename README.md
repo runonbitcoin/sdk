@@ -1,4 +1,4 @@
-# RUN SDK - 0.6.36 beta
+# RUN SDK - 0.6.37 beta
 
 RUN is a token protocol to build whatever you dream up. A world of interactive apps and tokens.
 
