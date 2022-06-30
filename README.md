@@ -1,4 +1,4 @@
-# RUN SDK - 0.6.37 beta
+# RUN SDK - 0.6.38 beta
 
 RUN is a token protocol to build whatever you dream up. A world of interactive apps and tokens.
 
@@ -14,8 +14,8 @@ Run `npm install` to install node dependencies
 
 ## Community
 
-Join us in the "run-sdk" channel on Atlantis Slack: https://atlantis.planaria.network
+Join us in our Discord, Run Nation: https://run.network/discord. Here you'll meet other developers using Run, hear about cool projects launching, and know right away when there are new announcements.
 
 ## Getting Help
 
-DM @runonbitcoin on Twitter, or ask for help the "run-sdk" channel in Atlantis Slack
+Post what's on your mind in the "ask-for-help" channel in the Run Nation Discord.
